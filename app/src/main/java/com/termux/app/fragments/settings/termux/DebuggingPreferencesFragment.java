@@ -1,4 +1,4 @@
-package com.termux.app.fragments.settings.termux;
+package com.lift.app.fragments.settings.lift;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -12,9 +12,9 @@ import androidx.preference.PreferenceDataStore;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
-import com.termux.R;
-import com.termux.shared.termux.settings.preferences.TermuxAppSharedPreferences;
-import com.termux.shared.logger.Logger;
+import com.lift.R;
+import com.lift.shared.lift.settings.preferences.LiftAppSharedPreferences;
+import com.lift.shared.logger.Logger;
 
 @Keep
 public class DebuggingPreferencesFragment extends PreferenceFragmentCompat {
@@ -38,7 +38,7 @@ public class DebuggingPreferencesFragment extends PreferenceFragmentCompat {
 
         ListPreference logLevelListPreference = findPreference("log_level");
         if (logLevelListPreference != null) {
-            TermuxAppSharedPreferences preferences = TermuxAppSharedPreferences.build(context, true);
+            LiftAppSharedPreferences preferences = LiftAppSharedPreferences.build(context, true);
             if (preferences == null) return;
 
             setLogLevelListPreferenceData(logLevelListPreference, context, preferences.getLogLevel());
@@ -67,13 +67,13 @@ public class DebuggingPreferencesFragment extends PreferenceFragmentCompat {
 class DebuggingPreferencesDataStore extends PreferenceDataStore {
 
     private final Context mContext;
-    private final TermuxAppSharedPreferences mPreferences;
+    private final LiftAppSharedPreferences mPreferences;
 
     private static DebuggingPreferencesDataStore mInstance;
 
     private DebuggingPreferencesDataStore(Context context) {
         mContext = context;
-        mPreferences = TermuxAppSharedPreferences.build(context, true);
+        mPreferences = LiftAppSharedPreferences.build(context, true);
     }
 
     public static synchronized DebuggingPreferencesDataStore getInstance(Context context) {

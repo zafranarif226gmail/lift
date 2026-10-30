@@ -1,12 +1,12 @@
-package com.termux.terminal;
+package com.lift.terminal;
 
 /**
- * Native methods for creating and managing pseudoterminal subprocesses. C code is in jni/termux.c.
+ * Native methods for creating and managing pseudoterminal subprocesses. C code is in jni/lift.c.
  */
 final class JNI {
 
     static {
-        System.loadLibrary("termux");
+        System.loadLibrary("lift");
     }
 
     /**

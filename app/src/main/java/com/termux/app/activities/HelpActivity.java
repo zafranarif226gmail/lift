@@ -1,4 +1,4 @@
-package com.termux.app.activities;
+package com.lift.app.activities;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
@@ -13,7 +13,7 @@ import android.widget.RelativeLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.termux.shared.termux.TermuxConstants;
+import com.lift.shared.lift.LiftConstants;
 
 /** Basic embedded browser for viewing help pages. */
 public final class HelpActivity extends AppCompatActivity {
@@ -41,7 +41,7 @@ public final class HelpActivity extends AppCompatActivity {
         mWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if (url.equals(TermuxConstants.TERMUX_WIKI_URL) || url.startsWith(TermuxConstants.TERMUX_WIKI_URL + "/")) {
+                if (url.equals(LiftConstants.LIFT_WIKI_URL) || url.startsWith(LiftConstants.LIFT_WIKI_URL + "/")) {
                     // Inline help.
                     setContentView(progressLayout);
                     return false;
@@ -62,7 +62,7 @@ public final class HelpActivity extends AppCompatActivity {
                 setContentView(mWebView);
             }
         });
-        mWebView.loadUrl(TermuxConstants.TERMUX_WIKI_URL);
+        mWebView.loadUrl(LiftConstants.LIFT_WIKI_URL);
     }
 
     @Override

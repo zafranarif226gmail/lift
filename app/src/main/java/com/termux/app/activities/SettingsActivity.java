@@ -1,4 +1,4 @@
-package com.termux.app.activities;
+package com.lift.app.activities;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -9,22 +9,22 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
-import com.termux.R;
-import com.termux.shared.activities.ReportActivity;
-import com.termux.shared.file.FileUtils;
-import com.termux.shared.models.ReportInfo;
-import com.termux.app.models.UserAction;
-import com.termux.shared.interact.ShareUtils;
-import com.termux.shared.android.PackageUtils;
-import com.termux.shared.termux.settings.preferences.TermuxAPIAppSharedPreferences;
-import com.termux.shared.termux.settings.preferences.TermuxFloatAppSharedPreferences;
-import com.termux.shared.termux.settings.preferences.TermuxTaskerAppSharedPreferences;
-import com.termux.shared.termux.settings.preferences.TermuxWidgetAppSharedPreferences;
-import com.termux.shared.android.AndroidUtils;
-import com.termux.shared.termux.TermuxConstants;
-import com.termux.shared.termux.TermuxUtils;
-import com.termux.shared.activity.media.AppCompatActivityUtils;
-import com.termux.shared.theme.NightMode;
+import com.lift.R;
+import com.lift.shared.activities.ReportActivity;
+import com.lift.shared.file.FileUtils;
+import com.lift.shared.models.ReportInfo;
+import com.lift.app.models.UserAction;
+import com.lift.shared.interact.ShareUtils;
+import com.lift.shared.android.PackageUtils;
+import com.lift.shared.lift.settings.preferences.LiftAPIAppSharedPreferences;
+import com.lift.shared.lift.settings.preferences.LiftFloatAppSharedPreferences;
+import com.lift.shared.lift.settings.preferences.LiftTaskerAppSharedPreferences;
+import com.lift.shared.lift.settings.preferences.LiftWidgetAppSharedPreferences;
+import com.lift.shared.android.AndroidUtils;
+import com.lift.shared.lift.LiftConstants;
+import com.lift.shared.lift.LiftUtils;
+import com.lift.shared.activity.media.AppCompatActivityUtils;
+import com.lift.shared.theme.NightMode;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -42,7 +42,7 @@ public class SettingsActivity extends AppCompatActivity {
                 .commit();
         }
 
-        AppCompatActivityUtils.setToolbar(this, com.termux.shared.R.id.toolbar);
+        AppCompatActivityUtils.setToolbar(this, com.lift.shared.R.id.toolbar);
         AppCompatActivityUtils.setShowBackButtonInActionBar(this, true);
     }
 
@@ -63,49 +63,49 @@ public class SettingsActivity extends AppCompatActivity {
             new Thread() {
                 @Override
                 public void run() {
-                    configureTermuxAPIPreference(context);
-                    configureTermuxFloatPreference(context);
-                    configureTermuxTaskerPreference(context);
-                    configureTermuxWidgetPreference(context);
+                    configureLiftAPIPreference(context);
+                    configureLiftFloatPreference(context);
+                    configureLiftTaskerPreference(context);
+                    configureLiftWidgetPreference(context);
                     configureAboutPreference(context);
                     configureDonatePreference(context);
                 }
             }.start();
         }
 
-        private void configureTermuxAPIPreference(@NonNull Context context) {
-            Preference termuxAPIPreference = findPreference("termux_api");
-            if (termuxAPIPreference != null) {
-                TermuxAPIAppSharedPreferences preferences = TermuxAPIAppSharedPreferences.build(context, false);
+        private void configureLiftAPIPreference(@NonNull Context context) {
+            Preference liftAPIPreference = findPreference("lift_api");
+            if (liftAPIPreference != null) {
+                LiftAPIAppSharedPreferences preferences = LiftAPIAppSharedPreferences.build(context, false);
                 // If failed to get app preferences, then likely app is not installed, so do not show its preference
-                termuxAPIPreference.setVisible(preferences != null);
+                liftAPIPreference.setVisible(preferences != null);
             }
         }
 
-        private void configureTermuxFloatPreference(@NonNull Context context) {
-            Preference termuxFloatPreference = findPreference("termux_float");
-            if (termuxFloatPreference != null) {
-                TermuxFloatAppSharedPreferences preferences = TermuxFloatAppSharedPreferences.build(context, false);
+        private void configureLiftFloatPreference(@NonNull Context context) {
+            Preference liftFloatPreference = findPreference("lift_float");
+            if (liftFloatPreference != null) {
+                LiftFloatAppSharedPreferences preferences = LiftFloatAppSharedPreferences.build(context, false);
                 // If failed to get app preferences, then likely app is not installed, so do not show its preference
-                termuxFloatPreference.setVisible(preferences != null);
+                liftFloatPreference.setVisible(preferences != null);
             }
         }
 
-        private void configureTermuxTaskerPreference(@NonNull Context context) {
-            Preference termuxTaskerPreference = findPreference("termux_tasker");
-            if (termuxTaskerPreference != null) {
-                TermuxTaskerAppSharedPreferences preferences = TermuxTaskerAppSharedPreferences.build(context, false);
+        private void configureLiftTaskerPreference(@NonNull Context context) {
+            Preference liftTaskerPreference = findPreference("lift_tasker");
+            if (liftTaskerPreference != null) {
+                LiftTaskerAppSharedPreferences preferences = LiftTaskerAppSharedPreferences.build(context, false);
                 // If failed to get app preferences, then likely app is not installed, so do not show its preference
-                termuxTaskerPreference.setVisible(preferences != null);
+                liftTaskerPreference.setVisible(preferences != null);
             }
         }
 
-        private void configureTermuxWidgetPreference(@NonNull Context context) {
-            Preference termuxWidgetPreference = findPreference("termux_widget");
-            if (termuxWidgetPreference != null) {
-                TermuxWidgetAppSharedPreferences preferences = TermuxWidgetAppSharedPreferences.build(context, false);
+        private void configureLiftWidgetPreference(@NonNull Context context) {
+            Preference liftWidgetPreference = findPreference("lift_widget");
+            if (liftWidgetPreference != null) {
+                LiftWidgetAppSharedPreferences preferences = LiftWidgetAppSharedPreferences.build(context, false);
                 // If failed to get app preferences, then likely app is not installed, so do not show its preference
-                termuxWidgetPreference.setVisible(preferences != null);
+                liftWidgetPreference.setVisible(preferences != null);
             }
         }
 
@@ -119,18 +119,18 @@ public class SettingsActivity extends AppCompatActivity {
                             String title = "About";
 
                             StringBuilder aboutString = new StringBuilder();
-                            aboutString.append(TermuxUtils.getAppInfoMarkdownString(context, TermuxUtils.AppInfoMode.TERMUX_AND_PLUGIN_PACKAGES));
+                            aboutString.append(LiftUtils.getAppInfoMarkdownString(context, LiftUtils.AppInfoMode.LIFT_AND_PLUGIN_PACKAGES));
                             aboutString.append("\n\n").append(AndroidUtils.getDeviceInfoMarkdownString(context, true));
-                            aboutString.append("\n\n").append(TermuxUtils.getImportantLinksMarkdownString(context));
+                            aboutString.append("\n\n").append(LiftUtils.getImportantLinksMarkdownString(context));
 
                             String userActionName = UserAction.ABOUT.getName();
 
                             ReportInfo reportInfo = new ReportInfo(userActionName,
-                                TermuxConstants.TERMUX_APP.TERMUX_SETTINGS_ACTIVITY_NAME, title);
+                                LiftConstants.LIFT_APP.LIFT_SETTINGS_ACTIVITY_NAME, title);
                             reportInfo.setReportString(aboutString.toString());
                             reportInfo.setReportSaveFileLabelAndPath(userActionName,
                                 Environment.getExternalStorageDirectory() + "/" +
-                                    FileUtils.sanitizeFileName(TermuxConstants.TERMUX_APP_NAME + "-" + userActionName + ".log", true, true));
+                                    FileUtils.sanitizeFileName(LiftConstants.LIFT_APP_NAME + "-" + userActionName + ".log", true, true));
 
                             ReportActivity.startReportActivity(context, reportInfo);
                         }
@@ -147,10 +147,10 @@ public class SettingsActivity extends AppCompatActivity {
                 String signingCertificateSHA256Digest = PackageUtils.getSigningCertificateSHA256DigestForPackage(context);
                 if (signingCertificateSHA256Digest != null) {
                     // If APK is a Google Playstore release, then do not show the donation link
-                    // since Termux isn't exempted from the playstore policy donation links restriction
+                    // since Lift isn't exempted from the playstore policy donation links restriction
                     // Check Fund solicitations: https://pay.google.com/intl/en_in/about/policy/
-                    String apkRelease = TermuxUtils.getAPKRelease(signingCertificateSHA256Digest);
-                    if (apkRelease == null || apkRelease.equals(TermuxConstants.APK_RELEASE_GOOGLE_PLAYSTORE_SIGNING_CERTIFICATE_SHA256_DIGEST)) {
+                    String apkRelease = LiftUtils.getAPKRelease(signingCertificateSHA256Digest);
+                    if (apkRelease == null || apkRelease.equals(LiftConstants.APK_RELEASE_GOOGLE_PLAYSTORE_SIGNING_CERTIFICATE_SHA256_DIGEST)) {
                         donatePreference.setVisible(false);
                         return;
                     } else {
@@ -159,7 +159,7 @@ public class SettingsActivity extends AppCompatActivity {
                 }
 
                 donatePreference.setOnPreferenceClickListener(preference -> {
-                    ShareUtils.openUrl(context, TermuxConstants.TERMUX_DONATE_URL);
+                    ShareUtils.openUrl(context, LiftConstants.LIFT_DONATE_URL);
                     return true;
                 });
             }

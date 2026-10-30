@@ -1,4 +1,4 @@
-package com.termux.terminal;
+package com.lift.terminal;
 
 import android.app.WallpaperManager;
 import android.graphics.Bitmap;
@@ -97,7 +97,7 @@ public class TerminalBitmap {
      * - https://cs.android.com/android/platform/superproject/+/android-16.0.0_r1:frameworks/base/core/java/android/view/Display.java;l=1052-1063
      *
      * If an app specifies `largeHeap=true` in its `AndroidManifest.xml`, then it can be allocated
-     * larger heap memory to load larger bitmaps maps instead of resulting in an OOM. The Termux app
+     * larger heap memory to load larger bitmaps maps instead of resulting in an OOM. The Lift app
      * does not have it enabled, and hence is more likely to have OOMs when loading larger bitmaps.
      * - https://developer.android.com/guide/topics/manifest/application-element#largeHeap
      * - https://developer.android.com/topic/performance/memory

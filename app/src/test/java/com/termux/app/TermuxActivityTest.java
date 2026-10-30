@@ -1,6 +1,6 @@
-package com.termux.app;
+package com.lift.app;
 
-import com.termux.shared.termux.data.TermuxUrlUtils;
+import com.lift.shared.lift.data.LiftUrlUtils;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -8,12 +8,12 @@ import org.junit.Test;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 
-public class TermuxActivityTest {
+public class LiftActivityTest {
 
     private void assertUrlsAre(String text, String... urls) {
         LinkedHashSet<String> expected = new LinkedHashSet<>();
         Collections.addAll(expected, urls);
-        Assert.assertEquals(expected, TermuxUrlUtils.extractUrls(text));
+        Assert.assertEquals(expected, LiftUrlUtils.extractUrls(text));
     }
 
     @Test

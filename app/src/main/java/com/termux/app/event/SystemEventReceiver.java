@@ -1,4 +1,4 @@
-package com.termux.app.event;
+package com.lift.app.event;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -9,12 +9,12 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.termux.shared.data.IntentUtils;
-import com.termux.shared.logger.Logger;
-import com.termux.shared.termux.TermuxUtils;
-import com.termux.shared.termux.file.TermuxFileUtils;
-import com.termux.shared.termux.shell.command.environment.TermuxShellEnvironment;
-import com.termux.shared.termux.shell.TermuxShellManager;
+import com.lift.shared.data.IntentUtils;
+import com.lift.shared.logger.Logger;
+import com.lift.shared.lift.LiftUtils;
+import com.lift.shared.lift.file.LiftFileUtils;
+import com.lift.shared.lift.shell.command.environment.LiftShellEnvironment;
+import com.lift.shared.lift.shell.LiftShellManager;
 
 public class SystemEventReceiver extends BroadcastReceiver {
 
@@ -52,16 +52,16 @@ public class SystemEventReceiver extends BroadcastReceiver {
     }
 
     public synchronized void onActionBootCompleted(@NonNull Context context, @NonNull Intent intent) {
-        TermuxShellManager.onActionBootCompleted(context, intent);
+        LiftShellManager.onActionBootCompleted(context, intent);
     }
 
     public synchronized void onActionPackageUpdated(@NonNull Context context, @NonNull Intent intent) {
         Uri data = intent.getData();
-        if (data != null && TermuxUtils.isUriDataForTermuxPluginPackage(data)) {
+        if (data != null && LiftUtils.isUriDataForLiftPluginPackage(data)) {
             Logger.logDebug(LOG_TAG, intent.getAction().replaceAll("^android.intent.action.", "") +
                 " event received for \"" + data.toString().replaceAll("^package:", "") + "\"");
-            if (TermuxFileUtils.isTermuxFilesDirectoryAccessible(context, false, false) == null)
-                TermuxShellEnvironment.writeEnvironmentToFile(context);
+            if (LiftFileUtils.isLiftFilesDirectoryAccessible(context, false, false) == null)
+                LiftShellEnvironment.writeEnvironmentToFile(context);
         }
     }
 

@@ -1,13 +1,13 @@
 ---
-page_ref: /docs/apps/termux/index.html
+page_ref: /docs/apps/lift/index.html
 ---
 
-# Termux App Docs
+# Lift App Docs
 
 <!--- DOC_HEADER_PLACEHOLDER -->
 
-Welcome to documentation for the [Termux App].
+Welcome to documentation for the [Lift App].
 
 ##
 
-[Termux App]: https://github.com/termux/termux-app
+[Lift App]: https://github.com/lift/lift-app

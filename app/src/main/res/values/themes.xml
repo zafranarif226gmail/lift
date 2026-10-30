@@ -4,19 +4,19 @@
      https://material.io/develop/android/theming/dark
     -->
 
-    <!-- TermuxApp Light DarkActionBar theme. -->
-    <style name="Theme.TermuxApp.Light.DarkActionBar" parent="Theme.BaseActivity.Light.DarkActionBar"/>
-    <!-- TermuxApp Light NoActionBar theme. -->
-    <style name="Theme.TermuxApp.Light.NoActionBar" parent="Theme.BaseActivity.Light.NoActionBar"/>
+    <!-- LiftApp Light DarkActionBar theme. -->
+    <style name="Theme.LiftApp.Light.DarkActionBar" parent="Theme.BaseActivity.Light.DarkActionBar"/>
+    <!-- LiftApp Light NoActionBar theme. -->
+    <style name="Theme.LiftApp.Light.NoActionBar" parent="Theme.BaseActivity.Light.NoActionBar"/>
 
-    <!-- TermuxApp DayNight DarkActionBar theme. -->
-    <style name="Theme.TermuxApp.DayNight.DarkActionBar" parent="Theme.BaseActivity.DayNight.DarkActionBar"/>
-    <!-- TermuxApp DayNight NoActionBar theme. -->
-    <style name="Theme.TermuxApp.DayNight.NoActionBar" parent="Theme.BaseActivity.DayNight.NoActionBar"/>
+    <!-- LiftApp DayNight DarkActionBar theme. -->
+    <style name="Theme.LiftApp.DayNight.DarkActionBar" parent="Theme.BaseActivity.DayNight.DarkActionBar"/>
+    <!-- LiftApp DayNight NoActionBar theme. -->
+    <style name="Theme.LiftApp.DayNight.NoActionBar" parent="Theme.BaseActivity.DayNight.NoActionBar"/>
 
 
-    <!-- TermuxActivity DayNight NoActionBar theme. -->
-    <style name="Theme.TermuxActivity.DayNight.NoActionBar" parent="Theme.TermuxApp.DayNight.NoActionBar">
+    <!-- LiftActivity DayNight NoActionBar theme. -->
+    <style name="Theme.LiftActivity.DayNight.NoActionBar" parent="Theme.LiftApp.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/black</item>
         <item name="colorPrimaryVariant">@color/black</item>
@@ -35,9 +35,9 @@
         <item name="android:windowAllowEnterTransitionOverlap">true</item>
 
         <!-- Left drawer. -->
-        <item name="buttonBarButtonStyle">@style/TermuxActivity.Drawer.ButtonBarStyle.Light</item>
-        <item name="termuxActivityDrawerBackground">@color/white</item>
-        <item name="termuxActivityDrawerImageTint">@color/black</item>
+        <item name="buttonBarButtonStyle">@style/LiftActivity.Drawer.ButtonBarStyle.Light</item>
+        <item name="liftActivityDrawerBackground">@color/white</item>
+        <item name="liftActivityDrawerImageTint">@color/black</item>
 
         <!-- Extra keys colors. -->
         <item name="extraKeysButtonTextColor">@color/white</item>

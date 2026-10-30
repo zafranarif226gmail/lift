@@ -1,4 +1,4 @@
-package com.termux.app.fragments.settings.termux;
+package com.lift.app.fragments.settings.lift;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -8,8 +8,8 @@ import androidx.preference.PreferenceDataStore;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
-import com.termux.R;
-import com.termux.shared.termux.settings.preferences.TermuxAppSharedPreferences;
+import com.lift.R;
+import com.lift.shared.lift.settings.preferences.LiftAppSharedPreferences;
 
 @Keep
 public class TerminalIOPreferencesFragment extends PreferenceFragmentCompat {
@@ -30,13 +30,13 @@ public class TerminalIOPreferencesFragment extends PreferenceFragmentCompat {
 class TerminalIOPreferencesDataStore extends PreferenceDataStore {
 
     private final Context mContext;
-    private final TermuxAppSharedPreferences mPreferences;
+    private final LiftAppSharedPreferences mPreferences;
 
     private static TerminalIOPreferencesDataStore mInstance;
 
     private TerminalIOPreferencesDataStore(Context context) {
         mContext = context;
-        mPreferences = TermuxAppSharedPreferences.build(context, true);
+        mPreferences = LiftAppSharedPreferences.build(context, true);
     }
 
     public static synchronized TerminalIOPreferencesDataStore getInstance(Context context) {

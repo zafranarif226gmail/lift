@@ -1,4 +1,4 @@
-package com.termux.terminal;
+package com.lift.terminal;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,7 +14,7 @@ public class AndroidUtils {
      * Get system properties as {@link Properties} from `/system/bin/getprop` command output
      * that reads the `/system/build.prop` file.
      *
-     * Sourced from https://github.com/termux/termux-app/blob/30ebb2dee381d292ade0f2868cfde0f9f20b89fe/termux-shared/src/main/java/com/termux/shared/android/AndroidUtils.java#L170.
+     * Sourced from https://github.com/lift/lift-app/blob/30ebb2dee381d292ade0f2868cfde0f9f20b89fe/lift-shared/src/main/java/com/lift/shared/android/AndroidUtils.java#L170.
      */
     public static Properties getSystemProperties(String logTag) {
         Properties systemProperties = new Properties();

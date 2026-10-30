@@ -10,7 +10,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#define TERMUX_UNUSED(x) x __attribute__((__unused__))
+#define LIFT_UNUSED(x) x __attribute__((__unused__))
 #ifdef __APPLE__
 # define LACKS_PTSNAME_R
 #endif
@@ -114,9 +114,9 @@ static int create_subprocess(JNIEnv* env,
     }
 }
 
-JNIEXPORT jint JNICALL Java_com_termux_terminal_JNI_createSubprocess(
+JNIEXPORT jint JNICALL Java_com_lift_terminal_JNI_createSubprocess(
         JNIEnv* env,
-        jclass TERMUX_UNUSED(clazz),
+        jclass LIFT_UNUSED(clazz),
         jstring cmd,
         jstring cwd,
         jobjectArray args,
@@ -182,13 +182,13 @@ JNIEXPORT jint JNICALL Java_com_termux_terminal_JNI_createSubprocess(
     return ptm;
 }
 
-JNIEXPORT void JNICALL Java_com_termux_terminal_JNI_setPtyWindowSize(JNIEnv* TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz), jint fd, jint rows, jint cols, jint cell_width, jint cell_height)
+JNIEXPORT void JNICALL Java_com_lift_terminal_JNI_setPtyWindowSize(JNIEnv* LIFT_UNUSED(env), jclass LIFT_UNUSED(clazz), jint fd, jint rows, jint cols, jint cell_width, jint cell_height)
 {
     struct winsize sz = { .ws_row = (unsigned short) rows, .ws_col = (unsigned short) cols, .ws_xpixel = (unsigned short) (cols * cell_width), .ws_ypixel = (unsigned short) (rows * cell_height) };
     ioctl(fd, TIOCSWINSZ, &sz);
 }
 
-JNIEXPORT void JNICALL Java_com_termux_terminal_JNI_setPtyUTF8Mode(JNIEnv* TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz), jint fd)
+JNIEXPORT void JNICALL Java_com_lift_terminal_JNI_setPtyUTF8Mode(JNIEnv* LIFT_UNUSED(env), jclass LIFT_UNUSED(clazz), jint fd)
 {
     struct termios tios;
     tcgetattr(fd, &tios);
@@ -198,7 +198,7 @@ JNIEXPORT void JNICALL Java_com_termux_terminal_JNI_setPtyUTF8Mode(JNIEnv* TERMU
     }
 }
 
-JNIEXPORT jint JNICALL Java_com_termux_terminal_JNI_waitFor(JNIEnv* TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz), jint pid)
+JNIEXPORT jint JNICALL Java_com_lift_terminal_JNI_waitFor(JNIEnv* LIFT_UNUSED(env), jclass LIFT_UNUSED(clazz), jint pid)
 {
     int status;
     waitpid(pid, &status, 0);
@@ -212,7 +212,7 @@ JNIEXPORT jint JNICALL Java_com_termux_terminal_JNI_waitFor(JNIEnv* TERMUX_UNUSE
     }
 }
 
-JNIEXPORT void JNICALL Java_com_termux_terminal_JNI_close(JNIEnv* TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz), jint fileDescriptor)
+JNIEXPORT void JNICALL Java_com_lift_terminal_JNI_close(JNIEnv* LIFT_UNUSED(env), jclass LIFT_UNUSED(clazz), jint fileDescriptor)
 {
     close(fileDescriptor);
 }

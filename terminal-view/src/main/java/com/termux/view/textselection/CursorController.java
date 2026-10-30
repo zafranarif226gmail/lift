@@ -1,9 +1,9 @@
-package com.termux.view.textselection;
+package com.lift.view.textselection;
 
 import android.view.MotionEvent;
 import android.view.ViewTreeObserver;
 
-import com.termux.view.TerminalView;
+import com.lift.view.TerminalView;
 
 /**
  * A CursorController instance can be used to control cursors in the text.

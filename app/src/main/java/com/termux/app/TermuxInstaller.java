@@ -1,4 +1,4 @@
-package com.termux.app;
+package com.lift.app;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -10,18 +10,18 @@ import android.system.Os;
 import android.util.Pair;
 import android.view.WindowManager;
 
-import com.termux.R;
-import com.termux.shared.file.FileUtils;
-import com.termux.shared.termux.crash.TermuxCrashUtils;
-import com.termux.shared.termux.file.TermuxFileUtils;
-import com.termux.shared.interact.MessageDialogUtils;
-import com.termux.shared.logger.Logger;
-import com.termux.shared.markdown.MarkdownUtils;
-import com.termux.shared.errors.Error;
-import com.termux.shared.android.PackageUtils;
-import com.termux.shared.termux.TermuxConstants;
-import com.termux.shared.termux.TermuxUtils;
-import com.termux.shared.termux.shell.command.environment.TermuxShellEnvironment;
+import com.lift.R;
+import com.lift.shared.file.FileUtils;
+import com.lift.shared.lift.crash.LiftCrashUtils;
+import com.lift.shared.lift.file.LiftFileUtils;
+import com.lift.shared.interact.MessageDialogUtils;
+import com.lift.shared.logger.Logger;
+import com.lift.shared.markdown.MarkdownUtils;
+import com.lift.shared.errors.Error;
+import com.lift.shared.android.PackageUtils;
+import com.lift.shared.lift.LiftConstants;
+import com.lift.shared.lift.LiftUtils;
+import com.lift.shared.lift.shell.command.environment.LiftShellEnvironment;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -33,13 +33,13 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static com.termux.shared.termux.TermuxConstants.TERMUX_PREFIX_DIR;
-import static com.termux.shared.termux.TermuxConstants.TERMUX_PREFIX_DIR_PATH;
-import static com.termux.shared.termux.TermuxConstants.TERMUX_STAGING_PREFIX_DIR;
-import static com.termux.shared.termux.TermuxConstants.TERMUX_STAGING_PREFIX_DIR_PATH;
+import static com.lift.shared.lift.LiftConstants.LIFT_PREFIX_DIR;
+import static com.lift.shared.lift.LiftConstants.LIFT_PREFIX_DIR_PATH;
+import static com.lift.shared.lift.LiftConstants.LIFT_STAGING_PREFIX_DIR;
+import static com.lift.shared.lift.LiftConstants.LIFT_STAGING_PREFIX_DIR_PATH;
 
 /**
- * Install the Termux bootstrap packages if necessary by following the below steps:
+ * Install the Lift bootstrap packages if necessary by following the below steps:
  * <p/>
  * (1) If $PREFIX already exist, assume that it is correct and be done. Note that this relies on that we do not create a
  * broken $PREFIX directory below.
@@ -57,25 +57,25 @@ import static com.termux.shared.termux.TermuxConstants.TERMUX_STAGING_PREFIX_DIR
  * <p/>
  * (5.2) For every other zip entry, extract it into $STAGING_PREFIX and set execute permissions if necessary.
  */
-final class TermuxInstaller {
+final class LiftInstaller {
 
-    private static final String LOG_TAG = "TermuxInstaller";
+    private static final String LOG_TAG = "LiftInstaller";
 
     /** Performs bootstrap setup if necessary. */
     static void setupBootstrapIfNeeded(final Activity activity, final Runnable whenDone) {
         String bootstrapErrorMessage;
         Error filesDirectoryAccessibleError;
 
-        // This will also call Context.getFilesDir(), which should ensure that termux files directory
+        // This will also call Context.getFilesDir(), which should ensure that lift files directory
         // is created if it does not already exist
-        filesDirectoryAccessibleError = TermuxFileUtils.isTermuxFilesDirectoryAccessible(activity, true, true);
+        filesDirectoryAccessibleError = LiftFileUtils.isLiftFilesDirectoryAccessible(activity, true, true);
         boolean isFilesDirectoryAccessible = filesDirectoryAccessibleError == null;
 
-        // Termux can only be run as the primary user (device owner) since only that
+        // Lift can only be run as the primary user (device owner) since only that
         // account has the expected file system paths. Verify that:
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !PackageUtils.isCurrentUserThePrimaryUser(activity)) {
             bootstrapErrorMessage = activity.getString(R.string.bootstrap_error_not_primary_user_message,
-                MarkdownUtils.getMarkdownCodeForString(TERMUX_PREFIX_DIR_PATH, false));
+                MarkdownUtils.getMarkdownCodeForString(LIFT_PREFIX_DIR_PATH, false));
             Logger.logError(LOG_TAG, "isFilesDirectoryAccessible: " + isFilesDirectoryAccessible);
             Logger.logError(LOG_TAG, bootstrapErrorMessage);
             sendBootstrapCrashReportNotification(activity, bootstrapErrorMessage);
@@ -89,9 +89,9 @@ final class TermuxInstaller {
             bootstrapErrorMessage = Error.getMinimalErrorString(filesDirectoryAccessibleError);
             //noinspection SdCardPath
             if (PackageUtils.isAppInstalledOnExternalStorage(activity) &&
-                !TermuxConstants.TERMUX_FILES_DIR_PATH.equals(activity.getFilesDir().getAbsolutePath().replaceAll("^/data/user/0/", "/data/data/"))) {
+                !LiftConstants.LIFT_FILES_DIR_PATH.equals(activity.getFilesDir().getAbsolutePath().replaceAll("^/data/user/0/", "/data/data/"))) {
                 bootstrapErrorMessage += "\n\n" + activity.getString(R.string.bootstrap_error_installed_on_portable_sd,
-                    MarkdownUtils.getMarkdownCodeForString(TERMUX_PREFIX_DIR_PATH, false));
+                    MarkdownUtils.getMarkdownCodeForString(LIFT_PREFIX_DIR_PATH, false));
             }
 
             Logger.logError(LOG_TAG, bootstrapErrorMessage);
@@ -103,15 +103,15 @@ final class TermuxInstaller {
         }
 
         // If prefix directory exists, even if its a symlink to a valid directory and symlink is not broken/dangling
-        if (FileUtils.directoryFileExists(TERMUX_PREFIX_DIR_PATH, true)) {
-            if (TermuxFileUtils.isTermuxPrefixDirectoryEmpty()) {
-                Logger.logInfo(LOG_TAG, "The termux prefix directory \"" + TERMUX_PREFIX_DIR_PATH + "\" exists but is empty or only contains specific unimportant files.");
+        if (FileUtils.directoryFileExists(LIFT_PREFIX_DIR_PATH, true)) {
+            if (LiftFileUtils.isLiftPrefixDirectoryEmpty()) {
+                Logger.logInfo(LOG_TAG, "The lift prefix directory \"" + LIFT_PREFIX_DIR_PATH + "\" exists but is empty or only contains specific unimportant files.");
             } else {
                 whenDone.run();
                 return;
             }
-        } else if (FileUtils.fileExists(TERMUX_PREFIX_DIR_PATH, false)) {
-            Logger.logInfo(LOG_TAG, "The termux prefix directory \"" + TERMUX_PREFIX_DIR_PATH + "\" does not exist but another file exists at its destination.");
+        } else if (FileUtils.fileExists(LIFT_PREFIX_DIR_PATH, false)) {
+            Logger.logInfo(LOG_TAG, "The lift prefix directory \"" + LIFT_PREFIX_DIR_PATH + "\" does not exist but another file exists at its destination.");
         }
 
         final ProgressDialog progress = ProgressDialog.show(activity, null, activity.getString(R.string.bootstrap_installer_body), true, false);
@@ -119,39 +119,39 @@ final class TermuxInstaller {
             @Override
             public void run() {
                 try {
-                    Logger.logInfo(LOG_TAG, "Installing " + TermuxConstants.TERMUX_APP_NAME + " bootstrap packages.");
+                    Logger.logInfo(LOG_TAG, "Installing " + LiftConstants.LIFT_APP_NAME + " bootstrap packages.");
 
                     Error error;
 
                     // Delete prefix staging directory or any file at its destination
-                    error = FileUtils.deleteFile("termux prefix staging directory", TERMUX_STAGING_PREFIX_DIR_PATH, true);
+                    error = FileUtils.deleteFile("lift prefix staging directory", LIFT_STAGING_PREFIX_DIR_PATH, true);
                     if (error != null) {
                         showBootstrapErrorDialog(activity, whenDone, Error.getErrorMarkdownString(error));
                         return;
                     }
 
                     // Delete prefix directory or any file at its destination
-                    error = FileUtils.deleteFile("termux prefix directory", TERMUX_PREFIX_DIR_PATH, true);
+                    error = FileUtils.deleteFile("lift prefix directory", LIFT_PREFIX_DIR_PATH, true);
                     if (error != null) {
                         showBootstrapErrorDialog(activity, whenDone, Error.getErrorMarkdownString(error));
                         return;
                     }
 
                     // Create prefix staging directory if it does not already exist and set required permissions
-                    error = TermuxFileUtils.isTermuxPrefixStagingDirectoryAccessible(true, true);
+                    error = LiftFileUtils.isLiftPrefixStagingDirectoryAccessible(true, true);
                     if (error != null) {
                         showBootstrapErrorDialog(activity, whenDone, Error.getErrorMarkdownString(error));
                         return;
                     }
 
                     // Create prefix directory if it does not already exist and set required permissions
-                    error = TermuxFileUtils.isTermuxPrefixDirectoryAccessible(true, true);
+                    error = LiftFileUtils.isLiftPrefixDirectoryAccessible(true, true);
                     if (error != null) {
                         showBootstrapErrorDialog(activity, whenDone, Error.getErrorMarkdownString(error));
                         return;
                     }
 
-                    Logger.logInfo(LOG_TAG, "Extracting bootstrap zip to prefix staging directory \"" + TERMUX_STAGING_PREFIX_DIR_PATH + "\".");
+                    Logger.logInfo(LOG_TAG, "Extracting bootstrap zip to prefix staging directory \"" + LIFT_STAGING_PREFIX_DIR_PATH + "\".");
 
                     final byte[] buffer = new byte[8096];
                     final List<Pair<String, String>> symlinks = new ArrayList<>(50);
@@ -168,7 +168,7 @@ final class TermuxInstaller {
                                     if (parts.length != 2)
                                         throw new RuntimeException("Malformed symlink line: " + line);
                                     String oldPath = parts[0];
-                                    String newPath = TERMUX_STAGING_PREFIX_DIR_PATH + "/" + parts[1];
+                                    String newPath = LIFT_STAGING_PREFIX_DIR_PATH + "/" + parts[1];
                                     symlinks.add(Pair.create(oldPath, newPath));
 
                                     error = ensureDirectoryExists(new File(newPath).getParentFile());
@@ -179,7 +179,7 @@ final class TermuxInstaller {
                                 }
                             } else {
                                 String zipEntryName = zipEntry.getName();
-                                File targetFile = new File(TERMUX_STAGING_PREFIX_DIR_PATH, zipEntryName);
+                                File targetFile = new File(LIFT_STAGING_PREFIX_DIR_PATH, zipEntryName);
                                 boolean isDirectory = zipEntry.isDirectory();
 
                                 error = ensureDirectoryExists(isDirectory ? targetFile : targetFile.getParentFile());
@@ -210,16 +210,16 @@ final class TermuxInstaller {
                         Os.symlink(symlink.first, symlink.second);
                     }
 
-                    Logger.logInfo(LOG_TAG, "Moving termux prefix staging to prefix directory.");
+                    Logger.logInfo(LOG_TAG, "Moving lift prefix staging to prefix directory.");
 
-                    if (!TERMUX_STAGING_PREFIX_DIR.renameTo(TERMUX_PREFIX_DIR)) {
-                        throw new RuntimeException("Moving termux prefix staging to prefix directory failed");
+                    if (!LIFT_STAGING_PREFIX_DIR.renameTo(LIFT_PREFIX_DIR)) {
+                        throw new RuntimeException("Moving lift prefix staging to prefix directory failed");
                     }
 
                     Logger.logInfo(LOG_TAG, "Bootstrap packages installed successfully.");
 
-                    // Recreate env file since termux prefix was wiped earlier
-                    TermuxShellEnvironment.writeEnvironmentToFile(activity);
+                    // Recreate env file since lift prefix was wiped earlier
+                    LiftShellEnvironment.writeEnvironmentToFile(activity);
 
                     activity.runOnUiThread(whenDone);
 
@@ -254,8 +254,8 @@ final class TermuxInstaller {
                     })
                     .setPositiveButton(R.string.bootstrap_error_try_again, (dialog, which) -> {
                         dialog.dismiss();
-                        FileUtils.deleteFile("termux prefix directory", TERMUX_PREFIX_DIR_PATH, true);
-                        TermuxInstaller.setupBootstrapIfNeeded(activity, whenDone);
+                        FileUtils.deleteFile("lift prefix directory", LIFT_PREFIX_DIR_PATH, true);
+                        LiftInstaller.setupBootstrapIfNeeded(activity, whenDone);
                     }).show();
             } catch (WindowManager.BadTokenException e1) {
                 // Activity already dismissed - ignore.
@@ -264,19 +264,19 @@ final class TermuxInstaller {
     }
 
     private static void sendBootstrapCrashReportNotification(Activity activity, String message) {
-        final String title = TermuxConstants.TERMUX_APP_NAME + " Bootstrap Error";
+        final String title = LiftConstants.LIFT_APP_NAME + " Bootstrap Error";
 
-        // Add info of all install Termux plugin apps as well since their target sdk or installation
-        // on external/portable sd card can affect Termux app files directory access or exec.
-        TermuxCrashUtils.sendCrashReportNotification(activity, LOG_TAG,
+        // Add info of all install Lift plugin apps as well since their target sdk or installation
+        // on external/portable sd card can affect Lift app files directory access or exec.
+        LiftCrashUtils.sendCrashReportNotification(activity, LOG_TAG,
             title, null, "## " + title + "\n\n" + message + "\n\n" +
-                TermuxUtils.getTermuxDebugMarkdownString(activity),
-            true, false, TermuxUtils.AppInfoMode.TERMUX_AND_PLUGIN_PACKAGES, true);
+                LiftUtils.getLiftDebugMarkdownString(activity),
+            true, false, LiftUtils.AppInfoMode.LIFT_AND_PLUGIN_PACKAGES, true);
     }
 
     static void setupStorageSymlinks(final Context context) {
-        final String LOG_TAG = "termux-storage";
-        final String title = TermuxConstants.TERMUX_APP_NAME + " Setup Storage Error";
+        final String LOG_TAG = "lift-storage";
+        final String title = LiftConstants.LIFT_APP_NAME + " Setup Storage Error";
 
         Logger.logInfo(LOG_TAG, "Setting up storage symlinks.");
 
@@ -284,15 +284,15 @@ final class TermuxInstaller {
             public void run() {
                 try {
                     Error error;
-                    File storageDir = TermuxConstants.TERMUX_STORAGE_HOME_DIR;
+                    File storageDir = LiftConstants.LIFT_STORAGE_HOME_DIR;
 
                     error = FileUtils.clearDirectory("~/storage", storageDir.getAbsolutePath());
                     if (error != null) {
                         Logger.logErrorAndShowToast(context, LOG_TAG, error.getMessage());
                         Logger.logErrorExtended(LOG_TAG, "Setup Storage Error\n" + error.toString());
-                        TermuxCrashUtils.sendCrashReportNotification(context, LOG_TAG, title, null,
+                        LiftCrashUtils.sendCrashReportNotification(context, LOG_TAG, title, null,
                             "## " + title + "\n\n" + Error.getErrorMarkdownString(error),
-                            true, false, TermuxUtils.AppInfoMode.TERMUX_PACKAGE, true);
+                            true, false, LiftUtils.AppInfoMode.LIFT_PACKAGE, true);
                         return;
                     }
 
@@ -335,7 +335,7 @@ final class TermuxInstaller {
                     // https://cs.android.com/android/platform/superproject/+/android-12.0.0_r32:frameworks/base/services/core/java/com/android/server/StorageManagerService.java;l=3796
                     // https://cs.android.com/android/platform/superproject/+/android-7.0.0_r36:frameworks/base/services/core/java/com/android/server/MountService.java;l=3053
 
-                    // Create "Android/data/com.termux" symlinks
+                    // Create "Android/data/com.lift" symlinks
                     File[] dirs = context.getExternalFilesDirs(null);
                     if (dirs != null && dirs.length > 0) {
                         for (int i = 0; i < dirs.length; i++) {
@@ -347,7 +347,7 @@ final class TermuxInstaller {
                         }
                     }
 
-                    // Create "Android/media/com.termux" symlinks
+                    // Create "Android/media/com.lift" symlinks
                     dirs = context.getExternalMediaDirs();
                     if (dirs != null && dirs.length > 0) {
                         for (int i = 0; i < dirs.length; i++) {
@@ -363,9 +363,9 @@ final class TermuxInstaller {
                 } catch (Exception e) {
                     Logger.logErrorAndShowToast(context, LOG_TAG, e.getMessage());
                     Logger.logStackTraceWithMessage(LOG_TAG, "Setup Storage Error: Error setting up link", e);
-                    TermuxCrashUtils.sendCrashReportNotification(context, LOG_TAG, title, null,
+                    LiftCrashUtils.sendCrashReportNotification(context, LOG_TAG, title, null,
                         "## " + title + "\n\n" + Logger.getStackTracesMarkdownString(null, Logger.getStackTracesStringArray(e)),
-                        true, false, TermuxUtils.AppInfoMode.TERMUX_PACKAGE, true);
+                        true, false, LiftUtils.AppInfoMode.LIFT_PACKAGE, true);
                 }
             }
         }.start();
@@ -377,7 +377,7 @@ final class TermuxInstaller {
 
     public static byte[] loadZipBytes() {
         // Only load the shared library when necessary to save memory usage.
-        System.loadLibrary("termux-bootstrap");
+        System.loadLibrary("lift-bootstrap");
         return getZip();
     }
 

@@ -1,38 +1,38 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <Preference
-        app:key="termux"
-        app:title="@string/termux_preferences_title"
-        app:summary="@string/termux_preferences_summary"
-        app:fragment="com.termux.app.fragments.settings.TermuxPreferencesFragment"/>
+        app:key="lift"
+        app:title="@string/lift_preferences_title"
+        app:summary="@string/lift_preferences_summary"
+        app:fragment="com.lift.app.fragments.settings.LiftPreferencesFragment"/>
 
     <Preference
-        app:key="termux_api"
-        app:title="@string/termux_api_preferences_title"
-        app:summary="@string/termux_api_preferences_summary"
+        app:key="lift_api"
+        app:title="@string/lift_api_preferences_title"
+        app:summary="@string/lift_api_preferences_summary"
         app:isPreferenceVisible="false"
-        app:fragment="com.termux.app.fragments.settings.TermuxAPIPreferencesFragment"/>
+        app:fragment="com.lift.app.fragments.settings.LiftAPIPreferencesFragment"/>
 
     <Preference
-        app:key="termux_float"
-        app:title="@string/termux_float_preferences_title"
-        app:summary="@string/termux_float_preferences_summary"
+        app:key="lift_float"
+        app:title="@string/lift_float_preferences_title"
+        app:summary="@string/lift_float_preferences_summary"
         app:isPreferenceVisible="false"
-        app:fragment="com.termux.app.fragments.settings.TermuxFloatPreferencesFragment"/>
+        app:fragment="com.lift.app.fragments.settings.LiftFloatPreferencesFragment"/>
 
     <Preference
-        app:key="termux_tasker"
-        app:title="@string/termux_tasker_preferences_title"
-        app:summary="@string/termux_tasker_preferences_summary"
+        app:key="lift_tasker"
+        app:title="@string/lift_tasker_preferences_title"
+        app:summary="@string/lift_tasker_preferences_summary"
         app:isPreferenceVisible="false"
-        app:fragment="com.termux.app.fragments.settings.TermuxTaskerPreferencesFragment"/>
+        app:fragment="com.lift.app.fragments.settings.LiftTaskerPreferencesFragment"/>
 
     <Preference
-        app:key="termux_widget"
-        app:title="@string/termux_widget_preferences_title"
-        app:summary="@string/termux_widget_preferences_summary"
+        app:key="lift_widget"
+        app:title="@string/lift_widget_preferences_title"
+        app:summary="@string/lift_widget_preferences_summary"
         app:isPreferenceVisible="false"
-        app:fragment="com.termux.app.fragments.settings.TermuxWidgetPreferencesFragment"/>
+        app:fragment="com.lift.app.fragments.settings.LiftWidgetPreferencesFragment"/>
 
     <Preference
         app:key="about"

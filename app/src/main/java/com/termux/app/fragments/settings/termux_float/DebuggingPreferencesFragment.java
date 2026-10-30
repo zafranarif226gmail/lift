@@ -1,4 +1,4 @@
-package com.termux.app.fragments.settings.termux_float;
+package com.lift.app.fragments.settings.lift_float;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -12,8 +12,8 @@ import androidx.preference.PreferenceDataStore;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
-import com.termux.R;
-import com.termux.shared.termux.settings.preferences.TermuxFloatAppSharedPreferences;
+import com.lift.R;
+import com.lift.shared.lift.settings.preferences.LiftFloatAppSharedPreferences;
 
 @Keep
 public class DebuggingPreferencesFragment extends PreferenceFragmentCompat {
@@ -37,10 +37,10 @@ public class DebuggingPreferencesFragment extends PreferenceFragmentCompat {
 
         ListPreference logLevelListPreference = findPreference("log_level");
         if (logLevelListPreference != null) {
-            TermuxFloatAppSharedPreferences preferences = TermuxFloatAppSharedPreferences.build(context, true);
+            LiftFloatAppSharedPreferences preferences = LiftFloatAppSharedPreferences.build(context, true);
             if (preferences == null) return;
 
-            com.termux.app.fragments.settings.termux.DebuggingPreferencesFragment.
+            com.lift.app.fragments.settings.lift.DebuggingPreferencesFragment.
                 setLogLevelListPreferenceData(logLevelListPreference, context, preferences.getLogLevel(true));
             loggingCategory.addPreference(logLevelListPreference);
         }
@@ -50,13 +50,13 @@ public class DebuggingPreferencesFragment extends PreferenceFragmentCompat {
 class DebuggingPreferencesDataStore extends PreferenceDataStore {
 
     private final Context mContext;
-    private final TermuxFloatAppSharedPreferences mPreferences;
+    private final LiftFloatAppSharedPreferences mPreferences;
 
     private static DebuggingPreferencesDataStore mInstance;
 
     private DebuggingPreferencesDataStore(Context context) {
         mContext = context;
-        mPreferences = TermuxFloatAppSharedPreferences.build(context, true);
+        mPreferences = LiftFloatAppSharedPreferences.build(context, true);
     }
 
     public static synchronized DebuggingPreferencesDataStore getInstance(Context context) {

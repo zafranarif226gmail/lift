@@ -1,4 +1,4 @@
-package com.termux.terminal;
+package com.lift.terminal;
 
 import java.util.Arrays;
 import java.util.HashSet;

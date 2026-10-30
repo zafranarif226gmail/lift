@@ -1,4 +1,4 @@
-package com.termux.view;
+package com.lift.view;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -9,11 +9,11 @@ import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.os.Build;
 
-import com.termux.terminal.TerminalBuffer;
-import com.termux.terminal.TerminalEmulator;
-import com.termux.terminal.TerminalRow;
-import com.termux.terminal.TextStyle;
-import com.termux.terminal.WcWidth;
+import com.lift.terminal.TerminalBuffer;
+import com.lift.terminal.TerminalEmulator;
+import com.lift.terminal.TerminalRow;
+import com.lift.terminal.TextStyle;
+import com.lift.terminal.WcWidth;
 
 /**
  * Renderer of a {@link TerminalEmulator} into a {@link Canvas}.
