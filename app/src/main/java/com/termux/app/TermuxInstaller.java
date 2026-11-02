@@ -197,6 +197,9 @@ final class LiftInstaller {
                                         BootstrapPrefixRelocator.copyWithLiftPaths(zipInput, outStream);
                                     }
                                     if (BootstrapPrefixRelocator.requiresExecutePermission(zipEntryName)) {
+                                        // Files created here already belong to Lift's app UID and receive
+                                        // its private app-data SELinux label. ZipInputStream does not restore
+                                        // Unix modes, so restore the owner execute bit required for startup.
                                         //noinspection OctalInteger
                                         Os.chmod(targetFile.getAbsolutePath(), 0700);
                                     }

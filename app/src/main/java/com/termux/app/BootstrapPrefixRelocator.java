@@ -41,7 +41,14 @@ final class BootstrapPrefixRelocator {
     private BootstrapPrefixRelocator() { }
 
     static String rewritePath(String path) {
-        return path.replace(TERMUX_APP_DATA_PATH, LIFT_APP_DATA_PATH_ALIAS);
+        return rewritePath(path, TERMUX_APP_DATA_PATH, LIFT_APP_DATA_PATH_ALIAS);
+    }
+
+    static String rewritePath(String path, String sourceAppDataPath, String targetAppDataPathAlias) {
+        if (sourceAppDataPath.length() != targetAppDataPathAlias.length()) {
+            throw new IllegalArgumentException("Bootstrap app data path replacement must preserve path length");
+        }
+        return path.replace(sourceAppDataPath, targetAppDataPathAlias);
     }
 
     /**
@@ -49,7 +56,18 @@ final class BootstrapPrefixRelocator {
      * loading the complete file into memory or changing ELF file offsets.
      */
     static void copyWithLiftPaths(InputStream input, OutputStream output) throws IOException {
-        byte[] buffer = new byte[BUFFER_SIZE + TERMUX_APP_DATA_PATH_BYTES.length - 1];
+        copyWithPaths(input, output, TERMUX_APP_DATA_PATH, LIFT_APP_DATA_PATH_ALIAS);
+    }
+
+    static void copyWithPaths(InputStream input, OutputStream output, String sourceAppDataPath,
+                              String targetAppDataPathAlias) throws IOException {
+        byte[] sourceAppDataPathBytes = sourceAppDataPath.getBytes(StandardCharsets.US_ASCII);
+        byte[] targetAppDataPathAliasBytes = targetAppDataPathAlias.getBytes(StandardCharsets.US_ASCII);
+        if (sourceAppDataPathBytes.length != targetAppDataPathAliasBytes.length) {
+            throw new IOException("Bootstrap app data path replacement must preserve path length");
+        }
+
+        byte[] buffer = new byte[BUFFER_SIZE + sourceAppDataPathBytes.length - 1];
         int pendingLength = 0;
         int bytesRead;
 
@@ -57,19 +75,19 @@ final class BootstrapPrefixRelocator {
             if (bytesRead == 0) continue;
 
             int totalLength = pendingLength + bytesRead;
-            int searchableLength = totalLength - TERMUX_APP_DATA_PATH_BYTES.length + 1;
+            int searchableLength = totalLength - sourceAppDataPathBytes.length + 1;
             int position = 0;
 
             while (position < searchableLength) {
-                int match = indexOfAppDataPath(buffer, position, searchableLength);
+                int match = indexOfAppDataPath(buffer, position, searchableLength, sourceAppDataPathBytes);
                 if (match == -1) {
                     int safeLength = searchableLength - position;
                     output.write(buffer, position, safeLength);
                     position += safeLength;
                 } else {
                     output.write(buffer, position, match - position);
-                    output.write(LIFT_APP_DATA_PATH_ALIAS_BYTES);
-                    position = match + TERMUX_APP_DATA_PATH_BYTES.length;
+                    output.write(targetAppDataPathAliasBytes);
+                    position = match + sourceAppDataPathBytes.length;
                 }
             }
 
@@ -77,7 +95,7 @@ final class BootstrapPrefixRelocator {
             System.arraycopy(buffer, position, buffer, 0, pendingLength);
         }
 
-        // At most TERMUX_APP_DATA_PATH_BYTES.length - 1 bytes remain, so no complete path can be here.
+        // At most sourceAppDataPathBytes.length - 1 bytes remain, so no complete path can be here.
         if (pendingLength > 0) output.write(buffer, 0, pendingLength);
     }
 
@@ -165,7 +183,7 @@ final class BootstrapPrefixRelocator {
                 int position = 0;
 
                 while (position < searchableLength) {
-                    int match = indexOfAppDataPath(buffer, position, searchableLength);
+                    int match = indexOfAppDataPath(buffer, position, searchableLength, TERMUX_APP_DATA_PATH_BYTES);
                     if (match == -1) {
                         position = searchableLength;
                     } else {
@@ -184,16 +202,15 @@ final class BootstrapPrefixRelocator {
         }
     }
 
-    private static int indexOfAppDataPath(byte[] buffer, int fromIndex, int toIndex) {
+    private static int indexOfAppDataPath(byte[] buffer, int fromIndex, int toIndex, byte[] pathBytes) {
         for (int index = fromIndex; index < toIndex; index++) {
-            if (buffer[index] != TERMUX_APP_DATA_PATH_BYTES[0]) continue;
+            if (buffer[index] != pathBytes[0]) continue;
 
             int offset = 1;
-            while (offset < TERMUX_APP_DATA_PATH_BYTES.length &&
-                buffer[index + offset] == TERMUX_APP_DATA_PATH_BYTES[offset]) {
+            while (offset < pathBytes.length && buffer[index + offset] == pathBytes[offset]) {
                 offset++;
             }
-            if (offset == TERMUX_APP_DATA_PATH_BYTES.length) return index;
+            if (offset == pathBytes.length) return index;
         }
         return -1;
     }
