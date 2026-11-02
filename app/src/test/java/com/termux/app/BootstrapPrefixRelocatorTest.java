@@ -171,6 +171,45 @@ public class BootstrapPrefixRelocatorTest {
     }
 
     @Test
+    public void extractedLoginWithoutOwnerExecutePermissionFailsThenStartsAfterBootstrapModeRestore() throws Exception {
+        Path temporaryDirectory = Files.createTempDirectory("lift-login-mode");
+        Path liftAppData = temporaryDirectory.resolve("com.lift");
+        Path liftPrefix = liftAppData.resolve("files/usr");
+        Path liftShell = liftPrefix.resolve("bin/sh");
+        Path liftLogin = liftPrefix.resolve("bin/login");
+
+        try {
+            Files.createDirectories(liftShell.getParent());
+            Files.createSymbolicLink(liftShell, getSystemShell());
+            Files.write(liftLogin, ("#!" + liftShell + "\nexit 0\n").getBytes(StandardCharsets.US_ASCII));
+
+            // ZipInputStream creates a regular file without applying the archive's Unix mode.
+            // Reproduce that missing owner execute bit before the installer restores mode 0700.
+            Files.setPosixFilePermissions(liftLogin, EnumSet.of(
+                PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));
+            Assert.assertTrue(BootstrapPrefixRelocator.requiresExecutePermission("bin/login"));
+            Assert.assertEquals(EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE),
+                Files.getPosixFilePermissions(liftLogin));
+
+            try {
+                new ProcessBuilder(liftLogin.toString()).start();
+                Assert.fail("Expected execve of a non-executable Lift login to return Permission denied");
+            } catch (IOException e) {
+                Assert.assertTrue(e.toString(), e.toString().toLowerCase(Locale.ROOT).contains("permission denied"));
+            }
+
+            // Mirrors the extraction chmod applied to bootstrap entries under bin/.
+            setOwnerExecutable(liftLogin);
+            Assert.assertEquals(EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE,
+                PosixFilePermission.OWNER_EXECUTE), Files.getPosixFilePermissions(liftLogin));
+            Assert.assertEquals(Files.getOwner(liftAppData), Files.getOwner(liftLogin));
+            Assert.assertEquals(0, new ProcessBuilder(liftLogin.toString()).start().waitFor());
+        } finally {
+            deleteRecursively(temporaryDirectory);
+        }
+    }
+
+    @Test
     public void writesTheExactLiftWelcomeMessageDuringBootstrapExtraction() throws Exception {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         BootstrapPrefixRelocator.copyBootstrapEntryWithLiftPaths("etc/motd",
