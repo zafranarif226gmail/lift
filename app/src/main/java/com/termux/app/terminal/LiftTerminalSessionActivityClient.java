@@ -116,6 +116,7 @@ public class LiftTerminalSessionActivityClient extends LiftTerminalSessionClient
 
     @Override
     public void onTextChanged(@NonNull TerminalSession changedSession) {
+        mActivity.onTerminalOutputAvailable(changedSession);
         if (!mActivity.isVisible()) return;
 
         if (mActivity.getCurrentSession() == changedSession) mActivity.getTerminalView().onScreenUpdated();
@@ -137,6 +138,7 @@ public class LiftTerminalSessionActivityClient extends LiftTerminalSessionClient
 
     @Override
     public void onSessionFinished(@NonNull TerminalSession finishedSession) {
+        mActivity.onTerminalOutputAvailable(finishedSession);
         LiftService service = mActivity.getLiftService();
 
         if (service == null || service.wantsToStop()) {

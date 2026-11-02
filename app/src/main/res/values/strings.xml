@@ -13,7 +13,7 @@
 
 <resources>
 
-    <string name="application_name">&LIFT_APP_NAME;</string>
+    <string name="application_name">Lift Terminal</string>
     <string name="shared_user_label">&LIFT_APP_NAME; user</string>
 
 
@@ -26,8 +26,6 @@
 
 
     <!-- Lift Bootstrap Packages Installation -->
-    <string name="bootstrap_installer_body">Installing bootstrap packages…</string>
-    <string name="bootstrap_relocation_body">Updating installed bootstrap paths…</string>
     <string name="bootstrap_error_title">Unable to install bootstrap</string>
     <string name="bootstrap_error_body">&LIFT_APP_NAME; was unable to install the bootstrap packages.</string>
     <string name="bootstrap_relocation_error_title">Unable to update bootstrap files</string>

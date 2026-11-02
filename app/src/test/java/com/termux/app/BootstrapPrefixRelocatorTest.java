@@ -105,14 +105,15 @@ public class BootstrapPrefixRelocatorTest {
     }
 
     @Test
-    public void inaccessibleTermuxLoginInterpreterReturnsPermissionDeniedAndRelocationStarts() throws Exception {
+    public void launchingLiftLoginWithTermuxInterpreterReturnsPermissionDeniedButRelocatedLoginStarts() throws Exception {
         Path temporaryDirectory = Files.createTempDirectory("lift-login-startup");
         Path termuxAppData = temporaryDirectory.resolve("com.termux");
         Path liftAppData = temporaryDirectory.resolve("com.lift");
-        Path termuxShell = termuxAppData.resolve("files/usr/bin/sh");
-        Path liftShell = liftAppData.resolve("files/usr/bin/sh");
-        Path originalLogin = temporaryDirectory.resolve("login");
-        Path relocatedLogin = temporaryDirectory.resolve("login-relocated");
+        Path termuxPrefix = termuxAppData.resolve("files/usr");
+        Path liftPrefix = liftAppData.resolve("files/usr");
+        Path termuxShell = termuxPrefix.resolve("bin/sh");
+        Path liftShell = liftPrefix.resolve("bin/sh");
+        Path liftLogin = liftPrefix.resolve("bin/login");
 
         try {
             Files.createDirectories(termuxShell.getParent());
@@ -122,17 +123,19 @@ public class BootstrapPrefixRelocatorTest {
             Files.createSymbolicLink(liftShell, systemShell);
 
             String originalScript = "#!" + termuxShell + "\nexit 0\n";
-            Files.write(originalLogin, originalScript.getBytes(StandardCharsets.US_ASCII));
-            setOwnerExecutable(originalLogin);
-            Assert.assertTrue(originalLogin.toFile().canExecute());
-            Assert.assertEquals(Files.getOwner(temporaryDirectory), Files.getOwner(originalLogin));
+            Files.write(liftLogin, originalScript.getBytes(StandardCharsets.US_ASCII));
+            setOwnerExecutable(liftLogin);
+            Assert.assertTrue(liftLogin.toFile().canExecute());
+            Assert.assertEquals(EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE,
+                PosixFilePermission.OWNER_EXECUTE), Files.getPosixFilePermissions(liftLogin));
+            Assert.assertEquals(Files.getOwner(liftAppData), Files.getOwner(liftLogin));
 
-            // This models another app's private data directory: the script can be executed,
-            // but its shebang interpreter cannot be traversed, so execve returns EACCES.
+            // This is the failing startup shape: Lift's login is executable, but its shebang
+            // points into another app's non-traversable private directory.
             Files.setPosixFilePermissions(termuxAppData, EnumSet.noneOf(PosixFilePermission.class));
             try {
-                int exitCode = new ProcessBuilder(originalLogin.toString()).start().waitFor();
-                Assert.fail("Expected execve to reject the inaccessible interpreter, got exit " + exitCode);
+                int exitCode = new ProcessBuilder(liftLogin.toString()).start().waitFor();
+                Assert.fail("Expected execve of the Lift login to reject its inaccessible interpreter, got exit " + exitCode);
             } catch (IOException e) {
                 Assert.assertTrue(e.toString(), e.toString().toLowerCase(Locale.ROOT).contains("permission denied"));
             } finally {
@@ -147,13 +150,15 @@ public class BootstrapPrefixRelocatorTest {
             BootstrapPrefixRelocator.copyWithPaths(
                 new ByteArrayInputStream(originalScript.getBytes(StandardCharsets.US_ASCII)), relocatedScript,
                 termuxAppData.toString(), targetAppDataAlias);
-            Files.write(relocatedLogin, relocatedScript.toByteArray());
-            setOwnerExecutable(relocatedLogin);
+            Files.write(liftLogin, relocatedScript.toByteArray());
+            setOwnerExecutable(liftLogin);
 
-            Assert.assertTrue(new String(Files.readAllBytes(relocatedLogin), StandardCharsets.US_ASCII)
+            Assert.assertTrue(new String(Files.readAllBytes(liftLogin), StandardCharsets.US_ASCII)
                 .startsWith("#!" + targetAppDataAlias + "/files/usr/bin/sh\n"));
-            Assert.assertEquals(Files.getOwner(temporaryDirectory), Files.getOwner(relocatedLogin));
-            Assert.assertEquals(0, new ProcessBuilder(relocatedLogin.toString()).start().waitFor());
+            Assert.assertEquals(EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE,
+                PosixFilePermission.OWNER_EXECUTE), Files.getPosixFilePermissions(liftLogin));
+            Assert.assertEquals(Files.getOwner(liftAppData), Files.getOwner(liftLogin));
+            Assert.assertEquals(0, new ProcessBuilder(liftLogin.toString()).start().waitFor());
         } finally {
             // Restore traversal before deleting the fixture if an assertion interrupts the test.
             if (Files.exists(termuxAppData, LinkOption.NOFOLLOW_LINKS)) {
@@ -163,6 +168,45 @@ public class BootstrapPrefixRelocatorTest {
             }
             deleteRecursively(temporaryDirectory);
         }
+    }
+
+    @Test
+    public void writesTheExactLiftWelcomeMessageDuringBootstrapExtraction() throws Exception {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        BootstrapPrefixRelocator.copyBootstrapEntryWithLiftPaths("etc/motd",
+            new ByteArrayInputStream("Welcome to Termux!\n".getBytes(StandardCharsets.UTF_8)), output);
+
+        String expected = "Welcome to lift!\n\n" +
+            "Working with packages:\n\n" +
+            "- Search:  pkg search <query>\n" +
+            "- Install: pkg install <package>\n" +
+            "- Upgrade: pkg upgrade\n\n" +
+            "For fixing any repository issues,\n" +
+            "try 'lift-change-repo' command.\n";
+        Assert.assertEquals(expected, new String(output.toByteArray(), StandardCharsets.UTF_8));
+        Assert.assertEquals(expected, BootstrapPrefixRelocator.LIFT_WELCOME_MESSAGE);
+    }
+
+    @Test
+    public void capturesOnlySuccessfulBootstrapSecondStageOutputAndReplaysItOnFailure() throws Exception {
+        String prefix = "/data/data/com.termux/files/usr";
+        String secondStage = prefix + "/etc/termux/termux-bootstrap/second-stage/termux-bootstrap-second-stage.sh";
+        String script = "if [ ! -L \"" + secondStage + ".lock\" ]; then\n" +
+            "\t\techo \"Starting fallback run of termux bootstrap second stage\"\n" +
+            "\t\tchmod +x \"" + secondStage + "\" || exit $?\n" +
+            "\t\t\"" + secondStage + "\" || exit $?\n" +
+            "\tfi\n";
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+        BootstrapPrefixRelocator.copyBootstrapEntryWithLiftPaths(
+            "etc/profile.d/01-termux-bootstrap-second-stage-fallback.sh",
+            new ByteArrayInputStream(script.getBytes(StandardCharsets.UTF_8)), output);
+
+        String rewritten = new String(output.toByteArray(), StandardCharsets.UTF_8);
+        Assert.assertTrue(rewritten.contains("/data/data/com.lift/./files/usr/etc/termux/termux-bootstrap/second-stage/termux-bootstrap-second-stage.sh"));
+        Assert.assertTrue(rewritten.contains("} > \"$bootstrap_log\"; then"));
+        Assert.assertTrue(rewritten.contains("cat \"$bootstrap_log\" >&2"));
+        Assert.assertFalse(rewritten.contains("echo \"Starting fallback run of termux bootstrap second stage\""));
     }
 
     @Test

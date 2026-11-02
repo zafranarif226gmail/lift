@@ -123,6 +123,9 @@ public final class LiftActivity extends AppCompatActivity implements ServiceConn
      */
     View mLiftActivityBottomSpaceView;
 
+    /** Startup overlay shown until the initial terminal produces output. */
+    private View mStartupLoadingOverlay;
+
     /**
      * The terminal extra keys view.
      */
@@ -214,6 +217,7 @@ public final class LiftActivity extends AppCompatActivity implements ServiceConn
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_termux);
+        mStartupLoadingOverlay = findViewById(R.id.startup_loading_overlay);
 
         // Load lift shared preferences
         // This will also fail if LiftConstants.LIFT_PACKAGE_NAME does not equal applicationId
@@ -270,6 +274,7 @@ public final class LiftActivity extends AppCompatActivity implements ServiceConn
                 getString(e.getMessage() != null && e.getMessage().contains("app is in background") ?
                     R.string.error_lift_service_start_failed_bg : R.string.error_lift_service_start_failed_general),
                 true);
+            hideStartupLoadingOverlay();
             mIsInvalidState = true;
             return;
         }
@@ -378,6 +383,27 @@ public final class LiftActivity extends AppCompatActivity implements ServiceConn
 
 
 
+    /** Hide the startup overlay after the first terminal output or when a session exits. */
+    public void onTerminalOutputAvailable(TerminalSession session) {
+        if (session == getCurrentSession()) hideStartupLoadingOverlay();
+    }
+
+    private void hideStartupLoadingOverlay() {
+        if (mStartupLoadingOverlay == null || mStartupLoadingOverlay.getVisibility() != View.VISIBLE) return;
+
+        mStartupLoadingOverlay.animate().cancel();
+        mStartupLoadingOverlay.animate()
+            .alpha(0f)
+            .setDuration(180)
+            .withEndAction(() -> {
+                if (mStartupLoadingOverlay != null) {
+                    mStartupLoadingOverlay.setVisibility(View.GONE);
+                    mStartupLoadingOverlay.setAlpha(1f);
+                }
+            })
+            .start();
+    }
+
     /**
      * Part of the {@link ServiceConnection} interface. The service is bound with
      * {@link #bindService(Intent, ServiceConnection, int)} in {@link #onCreate(Bundle)} which will cause a call to this
@@ -423,6 +449,7 @@ public final class LiftActivity extends AppCompatActivity implements ServiceConn
             } else {
                 mLiftTerminalSessionActivityClient.setCurrentSession(mLiftTerminalSessionActivityClient.getCurrentStoredSessionOrLast());
             }
+            hideStartupLoadingOverlay();
         }
 
         // Update the {@link TerminalSession} and {@link TerminalEmulator} clients.

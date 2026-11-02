@@ -54,9 +54,9 @@ Latest version is `v0.118.3`.
 
 **NOTICE: It is highly recommended that you update to `v0.118.0` or higher ASAP for various bug fixes, including a critical world-readable vulnerability reported [here](https://lift.github.io/general/2022/02/15/lift-apps-vulnerability-disclosures.html). See [below](#google-play-store-experimental-branch) for information regarding Lift on Google Play.**
 
-Lift can be obtained through various sources listed below for **only** Android `>= 7` with full support for apps and packages.
+This fork sets the minimum Android version to `6.0` (API `23`). Android `6` builds use the legacy `apt-android-5` bootstrap; package updates on that legacy environment are not supported by the upstream package project. Android `7` and newer builds use `apt-android-7` and have the normal package support described below.
 
-Support for both app and packages was dropped for Android `5` and `6` on [2020-01-01](https://www.reddit.com/r/lift/comments/dnzdbs/end_of_android56_support_on_20200101/) at `v0.83`, however it was re-added just for the app *without any support for package updates* on [2022-05-24](https://github.com/lift/lift-app/pull/2740) via the [GitHub](#github) sources. Check [here](https://github.com/lift/lift-app/wiki/Lift-on-android-5-or-6) for the details.
+Support for both app and packages was dropped for Android `5` and `6` on [2020-01-01](https://www.reddit.com/r/lift/comments/dnzdbs/end_of_android56_support_on_20200101/) at `v0.83`, however it was re-added just for the app *without any support for package updates* on [2022-05-24](https://github.com/lift/lift-app/pull/2740) via the [GitHub](#github) sources. This fork retains Android `6` app support with the same legacy package-update limitation. Check [here](https://github.com/lift/lift-app/wiki/Lift-on-android-5-or-6) for the details.
 
 The APK files of different sources are signed with different signature keys. The `Lift` app and all its plugins use the same [`sharedUserId`](https://developer.android.com/guide/topics/manifest/manifest-element) `com.lift` and so all their APKs installed on a device must have been signed with the same signature key to work together and so they must all be installed from the same source. Do not attempt to mix them together, i.e do not try to install an app or plugin from `F-Droid` and another one from a different source like `GitHub`. Android Package Manager will also normally not allow installation of APKs with different signatures and you will get errors on installation like `App not installed`, `Failed to install due to an unknown error`, `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, `INSTALL_FAILED_SHARED_USER_INCOMPATIBLE`, `signatures do not match previously installed version`, etc. This restriction can be bypassed with root or with custom roms.
 
@@ -78,7 +78,7 @@ Only a universal APK is released, which will work on all supported architectures
 
 ### GitHub
 
-Lift application can be obtained on `GitHub` either from [`GitHub Releases`](https://github.com/lift/lift-app/releases) for version `>= 0.118.0` or from [`GitHub Build Action`](https://github.com/lift/lift-app/actions/workflows/debug_build.yml?query=branch%3Amaster+event%3Apush) workflows. **For android `>= 7`, only install `apt-android-7` variants. For android `5` and `6`, only install `apt-android-5` variants.**
+Lift application can be obtained on `GitHub` either from [`GitHub Releases`](https://github.com/lift/lift-app/releases) for version `>= 0.118.0` or from [`GitHub Build Action`](https://github.com/lift/lift-app/actions/workflows/debug_build.yml?query=branch%3Amaster+event%3Apush) workflows. **For android `>= 7`, only install `apt-android-7` variants. For android `6`, install `apt-android-5` variants. Android `5` (API `21`–`22`) is not supported by this fork.**
 
 The APKs for `GitHub Releases` will be listed under `Assets` drop-down of a release. These are automatically attached when a new version is released.
 

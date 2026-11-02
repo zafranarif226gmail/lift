@@ -2,7 +2,6 @@ package com.lift.app;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
@@ -109,7 +108,16 @@ final class LiftInstaller {
                 Logger.logInfo(LOG_TAG, "The lift prefix directory \"" + LIFT_PREFIX_DIR_PATH + "\" exists but is empty or only contains specific unimportant files.");
             } else {
                 if (BootstrapPrefixRelocator.isExistingPrefixRelocated()) {
-                    whenDone.run();
+                    try {
+                        BootstrapPrefixRelocator.ensureLoginExecutable(LIFT_PREFIX_DIR);
+                        BootstrapPrefixRelocator.ensureLiftWelcomeMessage(LIFT_PREFIX_DIR);
+                        BootstrapPrefixRelocator.ensureBootstrapFallbackQuiet(LIFT_PREFIX_DIR);
+                        whenDone.run();
+                    } catch (Exception e) {
+                        String message = Logger.getStackTracesMarkdownString(null,
+                            Logger.getStackTracesStringArray(e));
+                        showBootstrapPrefixMigrationErrorDialog(activity, whenDone, message);
+                    }
                 } else {
                     migrateExistingPrefixIfNeeded(activity, whenDone);
                 }
@@ -119,7 +127,6 @@ final class LiftInstaller {
             Logger.logInfo(LOG_TAG, "The lift prefix directory \"" + LIFT_PREFIX_DIR_PATH + "\" does not exist but another file exists at its destination.");
         }
 
-        final ProgressDialog progress = ProgressDialog.show(activity, null, activity.getString(R.string.bootstrap_installer_body), true, false);
         new Thread() {
             @Override
             public void run() {
@@ -194,7 +201,7 @@ final class LiftInstaller {
 
                                 if (!isDirectory) {
                                     try (FileOutputStream outStream = new FileOutputStream(targetFile)) {
-                                        BootstrapPrefixRelocator.copyWithLiftPaths(zipInput, outStream);
+                                        BootstrapPrefixRelocator.copyBootstrapEntryWithLiftPaths(zipEntryName, zipInput, outStream);
                                     }
                                     if (BootstrapPrefixRelocator.requiresExecutePermission(zipEntryName)) {
                                         // Files created here already belong to Lift's app UID and receive
@@ -221,6 +228,9 @@ final class LiftInstaller {
                     }
 
                     Logger.logInfo(LOG_TAG, "Bootstrap packages installed successfully.");
+                    BootstrapPrefixRelocator.ensureLoginExecutable(LIFT_PREFIX_DIR);
+                    BootstrapPrefixRelocator.ensureLiftWelcomeMessage(LIFT_PREFIX_DIR);
+                    BootstrapPrefixRelocator.ensureBootstrapFallbackQuiet(LIFT_PREFIX_DIR);
 
                     // Recreate env file since lift prefix was wiped earlier
                     LiftShellEnvironment.writeEnvironmentToFile(activity);
@@ -231,14 +241,6 @@ final class LiftInstaller {
                 } catch (final Exception e) {
                     showBootstrapErrorDialog(activity, whenDone, Logger.getStackTracesMarkdownString(null, Logger.getStackTracesStringArray(e)));
 
-                } finally {
-                    activity.runOnUiThread(() -> {
-                        try {
-                            progress.dismiss();
-                        } catch (RuntimeException e) {
-                            // Activity already dismissed - ignore.
-                        }
-                    });
                 }
             }
         }.start();
@@ -246,14 +248,15 @@ final class LiftInstaller {
 
     /** Relocate existing Termux bootstrap paths without discarding installed packages or user changes. */
     private static void migrateExistingPrefixIfNeeded(Activity activity, Runnable whenDone) {
-        final ProgressDialog progress = ProgressDialog.show(activity, null,
-            activity.getString(R.string.bootstrap_relocation_body), true, false);
         new Thread() {
             @Override
             public void run() {
                 try {
                     Logger.logInfo(LOG_TAG, "Updating Termux bootstrap paths for Lift.");
                     BootstrapPrefixRelocator.relocateExistingPrefix(LIFT_PREFIX_DIR);
+                    BootstrapPrefixRelocator.ensureLoginExecutable(LIFT_PREFIX_DIR);
+                    BootstrapPrefixRelocator.ensureLiftWelcomeMessage(LIFT_PREFIX_DIR);
+                    BootstrapPrefixRelocator.ensureBootstrapFallbackQuiet(LIFT_PREFIX_DIR);
                     BootstrapPrefixRelocator.markPrefixRelocated();
                     Logger.logInfo(LOG_TAG, "Existing bootstrap paths updated successfully.");
                     activity.runOnUiThread(whenDone);
@@ -261,14 +264,6 @@ final class LiftInstaller {
                     String message = Logger.getStackTracesMarkdownString(null,
                         Logger.getStackTracesStringArray(e));
                     showBootstrapPrefixMigrationErrorDialog(activity, whenDone, message);
-                } finally {
-                    activity.runOnUiThread(() -> {
-                        try {
-                            progress.dismiss();
-                        } catch (RuntimeException e) {
-                            // Activity already dismissed - ignore.
-                        }
-                    });
                 }
             }
         }.start();
