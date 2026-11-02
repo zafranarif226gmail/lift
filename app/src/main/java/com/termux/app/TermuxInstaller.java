@@ -55,7 +55,8 @@ import static com.lift.shared.lift.LiftConstants.LIFT_STAGING_PREFIX_DIR_PATH;
  * <p/>
  * (5.1) If the zip entry encountered is SYMLINKS.txt, go through it and remember all symlinks to setup.
  * <p/>
- * (5.2) For every other zip entry, extract it into $STAGING_PREFIX and set execute permissions if necessary.
+ * (5.2) For every other zip entry, adapt Termux's compiled prefix to Lift's prefix, extract it into
+ * $STAGING_PREFIX and set execute permissions if necessary.
  */
 final class LiftInstaller {
 
@@ -107,7 +108,11 @@ final class LiftInstaller {
             if (LiftFileUtils.isLiftPrefixDirectoryEmpty()) {
                 Logger.logInfo(LOG_TAG, "The lift prefix directory \"" + LIFT_PREFIX_DIR_PATH + "\" exists but is empty or only contains specific unimportant files.");
             } else {
-                whenDone.run();
+                if (BootstrapPrefixRelocator.isExistingPrefixRelocated()) {
+                    whenDone.run();
+                } else {
+                    migrateExistingPrefixIfNeeded(activity, whenDone);
+                }
                 return;
             }
         } else if (FileUtils.fileExists(LIFT_PREFIX_DIR_PATH, false)) {
@@ -153,7 +158,6 @@ final class LiftInstaller {
 
                     Logger.logInfo(LOG_TAG, "Extracting bootstrap zip to prefix staging directory \"" + LIFT_STAGING_PREFIX_DIR_PATH + "\".");
 
-                    final byte[] buffer = new byte[8096];
                     final List<Pair<String, String>> symlinks = new ArrayList<>(50);
 
                     final byte[] zipBytes = loadZipBytes();
@@ -167,7 +171,7 @@ final class LiftInstaller {
                                     String[] parts = line.split("←");
                                     if (parts.length != 2)
                                         throw new RuntimeException("Malformed symlink line: " + line);
-                                    String oldPath = parts[0];
+                                    String oldPath = BootstrapPrefixRelocator.rewritePath(parts[0]);
                                     String newPath = LIFT_STAGING_PREFIX_DIR_PATH + "/" + parts[1];
                                     symlinks.add(Pair.create(oldPath, newPath));
 
@@ -190,12 +194,9 @@ final class LiftInstaller {
 
                                 if (!isDirectory) {
                                     try (FileOutputStream outStream = new FileOutputStream(targetFile)) {
-                                        int readBytes;
-                                        while ((readBytes = zipInput.read(buffer)) != -1)
-                                            outStream.write(buffer, 0, readBytes);
+                                        BootstrapPrefixRelocator.copyWithLiftPaths(zipInput, outStream);
                                     }
-                                    if (zipEntryName.startsWith("bin/") || zipEntryName.startsWith("libexec") ||
-                                        zipEntryName.startsWith("lib/apt/apt-helper") || zipEntryName.startsWith("lib/apt/methods")) {
+                                    if (BootstrapPrefixRelocator.requiresExecutePermission(zipEntryName)) {
                                         //noinspection OctalInteger
                                         Os.chmod(targetFile.getAbsolutePath(), 0700);
                                     }
@@ -220,6 +221,7 @@ final class LiftInstaller {
 
                     // Recreate env file since lift prefix was wiped earlier
                     LiftShellEnvironment.writeEnvironmentToFile(activity);
+                    BootstrapPrefixRelocator.markPrefixRelocated();
 
                     activity.runOnUiThread(whenDone);
 
@@ -237,6 +239,59 @@ final class LiftInstaller {
                 }
             }
         }.start();
+    }
+
+    /** Relocate existing Termux bootstrap paths without discarding installed packages or user changes. */
+    private static void migrateExistingPrefixIfNeeded(Activity activity, Runnable whenDone) {
+        final ProgressDialog progress = ProgressDialog.show(activity, null,
+            activity.getString(R.string.bootstrap_relocation_body), true, false);
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Logger.logInfo(LOG_TAG, "Updating Termux bootstrap paths for Lift.");
+                    BootstrapPrefixRelocator.relocateExistingPrefix(LIFT_PREFIX_DIR);
+                    BootstrapPrefixRelocator.markPrefixRelocated();
+                    Logger.logInfo(LOG_TAG, "Existing bootstrap paths updated successfully.");
+                    activity.runOnUiThread(whenDone);
+                } catch (final Exception e) {
+                    String message = Logger.getStackTracesMarkdownString(null,
+                        Logger.getStackTracesStringArray(e));
+                    showBootstrapPrefixMigrationErrorDialog(activity, whenDone, message);
+                } finally {
+                    activity.runOnUiThread(() -> {
+                        try {
+                            progress.dismiss();
+                        } catch (RuntimeException e) {
+                            // Activity already dismissed - ignore.
+                        }
+                    });
+                }
+            }
+        }.start();
+    }
+
+    private static void showBootstrapPrefixMigrationErrorDialog(Activity activity, Runnable whenDone,
+                                                                 String message) {
+        Logger.logErrorExtended(LOG_TAG, "Bootstrap Prefix Update Error:\n" + message);
+        sendBootstrapCrashReportNotification(activity, message);
+
+        activity.runOnUiThread(() -> {
+            try {
+                new AlertDialog.Builder(activity).setTitle(R.string.bootstrap_relocation_error_title)
+                    .setMessage(R.string.bootstrap_relocation_error_body)
+                    .setNegativeButton(R.string.bootstrap_error_abort, (dialog, which) -> {
+                        dialog.dismiss();
+                        activity.finish();
+                    })
+                    .setPositiveButton(R.string.bootstrap_error_try_again, (dialog, which) -> {
+                        dialog.dismiss();
+                        migrateExistingPrefixIfNeeded(activity, whenDone);
+                    }).show();
+            } catch (WindowManager.BadTokenException e1) {
+                // Activity already dismissed - ignore.
+            }
+        });
     }
 
     public static void showBootstrapErrorDialog(Activity activity, Runnable whenDone, String message) {
